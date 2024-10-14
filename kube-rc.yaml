@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: my-first-rc
+spec:
+  replicas: 2 # number of the pod
+  selector: # The pod selector determining what pods the RC is operating on
+    environment: testing # label value
+  template: # pod template
+    metadata:
+      labels:
+        environment: testing # label value
+    spec:
+      containers:
+      - image: flask-api # image used to run container
+        name: hello-kube # name of the container
+        ports:
+          - containerPort: 3000 # pod of the container
+        imagePullPolicy: Never

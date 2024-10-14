@@ -1,0 +1,7 @@
+eval $(minikube docker-env) 
+
+d build -t flask-api .
+
+k apply -f kube-pod.yaml
+
+k port-forward pod/my-first-pod 3000:3000

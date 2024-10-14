@@ -1,0 +1,85 @@
+
+# emptyDir
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-volumn
+spec:
+  containers:
+    - name: html-generator
+      image: luksa/fortune # image generate random http page
+      volumeMounts:
+        - name: html # The volume called html is mounted at /var/htdocs in the container
+          mountPath: /var/htdocs
+    - name: web-server
+      image: nginx:alpine
+      ports:
+        - containerPort: 80
+          protocol: TCP
+      volumeMounts:
+        - name: html # The volume called html is mounted at /usr/share/nginx/html in the container
+          mountPath: /usr/share/nginx/html
+          readOnly: true
+  volumes: # define volumes
+    - name: html # name of the volumes
+      emptyDir: {} # define type is emptyDir
+
+---
+# hostPath
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-volume
+spec:
+  containers:
+    - image: nginx:alpine
+      name: web-server
+      volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+          readOnly: true
+        - name: log # log volume
+          mountPath: /var/log/nginx # mounted at /var/log/nginx in the container
+      ports:
+        - containerPort: 80
+          protocol: TCP
+  volumes:
+    - name: html
+      gitRepo: # gitRepo volume
+        repository: https://github.com/luksa/kubia-website-example.git # The volume will clone this Git repository
+        revision: master # master branch
+        directory: . # cloned into the root dir of the volume.
+    - name: log
+      hostPath: # hostPath volume
+        path: /var/log # folder of woker node
+
+---
+# cloud storage
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cloud-storage-volumn
+spec:
+  containers:
+    - image: mongo
+      name: mongodb
+      ports:
+        - containerPort: 27017
+          protocol: TCP
+      volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+  volumes:
+      # use google
+    - name: mongodb-data
+      gcePersistentDisk: # google cloud disk volume
+        pdName: mongodb # name of the persistent disk on google cloud
+        fsType: ext4
+      # use aws
+        volumes:
+    - name: mongodb-data
+      awsElasticBlockStore: # using AWS ElasticBlockStore instead of gcePersistentDisk
+        pdName: aws-ebs # name of the EBS on AWS
+        fsType: ext4
+
+

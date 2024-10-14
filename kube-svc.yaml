@@ -1,0 +1,66 @@
+# App
+
+apiVersion: apps/v1 # change version API
+kind: ReplicaSet
+metadata:
+  name: my-first-rs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: test-svc
+  template:
+    metadata:
+      labels:
+        app: test-svc
+    spec:
+      containers:
+      - image: flask-api
+        name: random
+        ports:
+          - containerPort: 3000
+        imagePullPolicy: Never
+        
+# ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-first-svc-cluster-ip
+spec:
+  selector:
+    app: test-svc
+  ports:
+    - port: 3000 # port of the serivce
+      targetPort: 3000 # port of the container that service will forward to 
+
+
+# Nodeport
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-first-svc-nodeport
+spec:
+  selector:
+    app: test-svc
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 31000
+
+  
+# # Loadbalancer
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: my-first-svc-loadbalancer
+# spec:
+#   selector:
+#     app: test-svc
+#   type: LoadBalancer
+#   ports:
+#     - port: 80
+#       targetPort: 8080

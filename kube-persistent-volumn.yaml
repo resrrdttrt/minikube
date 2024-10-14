@@ -1,0 +1,80 @@
+# create PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-first-pv
+spec:
+  capacity:
+    storage: 10Gi # size of the storage
+  accessModes: # access mode
+    - ReadWriteOnce # can be mounted by a single wokrer node for reading and writing
+    # - ReadOnlyMany # can be mounted by a multiple wokrer node for reading only
+  persistentVolumeReclaimPolicy: Retain # Retain (keep data in pv when delete pvc) Recycle (delete data in pv when delete pvc) Delete (delete pv when delete pvc)
+  hostPath: # hostPath volume
+    path: /home/resrrdttrt/Minikube/hostPath
+
+---
+# create PVc
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-first-pvc
+spec:
+  resources:
+    requests:
+      storage: 10Gi # request 10Gi storage
+  accessModes:
+    - ReadWriteOnce # only allow one node can be read and write
+  storageClassName: "" # không sử dụng storageClassName để tự động tạo PV mà ta sẽ xài PV có sẵn
+
+---
+# create pod consume pvc
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: my-pv-pod 
+  labels:
+    environment: testing 
+    project: kubernetes-series
+spec:
+  containers:
+    - image: flask-api 
+      name: hello-kube 
+      volumeMounts:
+        - name: my-pod-volume
+          mountPath: /data/db
+      ports:
+        - containerPort: 3000 
+          protocol: TCP
+      imagePullPolicy: Never 
+  volumes:
+    - name: my-pod-volume
+      persistentVolumeClaim:
+        claimName: my-first-pvc # specify PVCs we want to use
+
+# create storage class
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast
+provisioner: kubernetes.io/gce-pd # use gce-pd provisioner
+parameters:
+  type: pd-ssd
+  zone: europe-west1-b
+
+
+# create pvc with storage class
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+spec:
+  storageClassName: fast # This PVC use fast StorageClass
+  resources:
+    requests:
+      storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+
+
+
