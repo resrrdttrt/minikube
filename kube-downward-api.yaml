@@ -1,0 +1,92 @@
+# using downward in env
+apiVersion: v1
+kind: Pod
+metadata:
+  name: downward
+spec:
+  containers:
+    - name: main
+      image: busybox
+      command: ["sleep", "9999999"]
+      resources:
+        requests:
+          cpu: 15m
+          memory: 100Ki
+        limits:
+          cpu: 100m
+          memory: 8Mi
+      env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef: # using fieldRef for Accesses metadata about the pod and its environment (e.g., pod name, namespace, node name)
+              fieldPath: metadata.name # the metadata.name field from the pod manifest
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace # the metadata.namespace field from the pod manifest
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP # access pod IP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName # access node name
+        - name: CONTAINER_CPU_REQUEST_MILLICORES
+          valueFrom:
+            resourceFieldRef: # using resourceFieldRef for Accesses resource requests or limits specific to the container itself (e.g., CPU, memory)
+              resource: requests.cpu
+              divisor: 1m
+        - name: CONTAINER_MEMORY_LIMIT_KIBIBYTES
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.memory
+              divisor: 1Ki
+
+
+# using downward in volume
+apiVersion: v1
+kind: Pod
+metadata:
+  name: downward-volume
+spec:
+  containers:
+    - name: main
+      image: busybox
+      command: ["sleep", "9999999"]
+      resources:
+        requests:
+          cpu: 15m
+          memory: 100Ki
+        limits:
+          cpu: 100m
+          memory: 8Mi
+      volumeMounts:
+        - name: downward
+          mountPath: /etc/downward
+  volumes:
+    - name: downward
+      downwardAPI: # using downward API
+        items:
+          - path: "podName" # file name mount to container
+            fieldRef:
+              fieldPath: metadata.name
+          - path: "podNamespace"
+            fieldRef:
+              fieldPath: metadata.namespace
+          - path: "labels"
+            fieldRef:
+              fieldPath: metadata.labels
+          - path: "annotations"
+            fieldRef:
+              fieldPath: metadata.annotations
+          - path: "containerCpuRequestMilliCores"
+            resourceFieldRef:
+              containerName: main
+              resource: requests.cpu
+              divisor: 1m
+          - path: "containerMemoryLimitBytes"
+            resourceFieldRef:
+              containerName: main
+              resource: limits.memory
+              divisor: 1Ki

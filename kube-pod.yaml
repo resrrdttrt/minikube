@@ -13,6 +13,17 @@ spec:
         - containerPort: 3000 # The port the app is listening on 
           protocol: TCP
       imagePullPolicy: Never # Tell Kubernetes to use the local image
+      env: # pass env to container
+        - name: PORT # env name
+          value: "3000" # env value (always string)
+      command: ["sleep", "9999999"] # thực thi command khi tạo container
+      resources: # cấu hình tài nguyên của container
+        requests:
+          cpu: 15m
+          memory: 100Ki
+        limits:
+          cpu: 100m
+          memory: 8Mi
 ---
 
 apiVersion: v1

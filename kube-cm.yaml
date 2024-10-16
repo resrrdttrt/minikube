@@ -1,0 +1,113 @@
+# create config map dạng key value
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  DB: postgres
+  USER: postgres
+  PASSWORD: postgres
+
+# create pod using config map dạng key value
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-cm
+  labels:
+    app: application
+spec:
+  containers:
+    - image: 080196/hello-cm
+      name: hello-cm
+      ports:
+        - containerPort: 3000
+      envFrom: # using envFrom instead of env
+        - configMapRef: # referencing the ConfigMap
+            name: postgres-config # name of the ConfigMap
+          prefix: POSTGRES_ # add prefixed POSTGRES_ to all variable
+      env:
+        - name: PORT
+          value: "3000"
+        - name: DB_HOST
+          value: postgres
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postgres
+  labels:
+    app: db
+spec:
+  containers:
+    - image: postgres
+      name: postgres
+      ports:
+        - containerPort: 5432
+      envFrom:
+        - configMapRef:
+            name: postgres-config
+          prefix: POSTGRES_
+
+# create service for testing purpose 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: db
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+
+# create config map dạng file
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  my-nginx-config.conf: |
+    server {
+      listen 80;
+      server_name www.kubia-example.com;
+
+      gzip on;
+      gzip_types text/plain application/xml;
+
+      location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+      }
+    }
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+    - image: nginx:alpine
+      name: web-server
+      volumeMounts:
+        - mountPath: /etc/nginx/conf.d # mount content of the configmap to container
+          name: config
+          defaultMode: "0600" # set permission
+          readOnly: true # set permission
+  volumes:
+    - name: config # volume use configmap as content
+      configMap:
+        name: nginx-config # configmap name
+        items:
+          - key: my-nginx-config.conf
+            path: gzip.conf # change name of file from my-nginx-config.conf to gzip.conf
+
+    - name: config
+      mountPath: /etc/nginx/conf.d/gzip.conf # mount content of my-nginx-config.conf file to gzip.conf file
+      subPath: my-nginx-config.conf # Instead of mounting the whole volume, you’re only mounting the my-nginx-config.conf
+      readOnly: true

@@ -64,3 +64,18 @@ spec:
 #   ports:
 #     - port: 80
 #       targetPort: 8080
+
+
+# Headless
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-first-svc-cluster-ip
+spec:
+  clusterIP: None # 
+  selector:
+    app: test-svc
+  ports:
+    - port: 3000 # port of the serivce
+      targetPort: 3000 # port of the container that service will forward to 
