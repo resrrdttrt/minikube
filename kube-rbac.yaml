@@ -1,0 +1,53 @@
+# create role
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: Role 
+metadata:
+  name: my-first-role  
+  namespace: my-namespace  
+rules:  # Defines the permissions granted by this Role
+  - apiGroups: [""]  # The API group for the resources ("" means the core API)
+    resources: ["pods"]  # The resources this Role can access (["*"] for accept all)
+    verbs: ["get", "watch", "list"]  # Allowed actions on the resources
+
+---
+# create role binding
+apiVersion: rbac.authorization.k8s.io/v1 
+kind: RoleBinding  
+metadata:
+  name: my-role-binding  
+  namespace: my-namespace  
+subjects:  # The users/groups/service accounts that this RoleBinding applies to
+  - kind: ServiceAccount  # The kind of subject (e.g., User, Group, ServiceAccount)
+    name: my-first-service-account  # Name of the ServiceAccount to bind
+    namespace: my-namespace  
+roleRef:  # Reference to the Role being bound
+  kind: Role  
+  name: my-first-role  
+  apiGroup: rbac.authorization.k8s.io  
+
+---
+#create cluster role
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: ClusterRole 
+metadata:
+  name: my-first-cluster-role  
+rules:  
+  - apiGroups: [""] 
+    resources: ["pods"]  
+    verbs: ["get", "watch", "list"] 
+
+---
+#create cluster role binding
+apiVersion: rbac.authorization.k8s.io/v1  
+kind: ClusterRoleBinding 
+metadata:
+  name: my-first-cluster-role-binding  
+subjects: 
+  - kind: ServiceAccount  
+    name: my-first-service-account 
+    namespace: my-namespace  
+roleRef:  
+  kind: ClusterRole  
+  name: my-first-cluster-role  
+  apiGroup: rbac.authorization.k8s.io 
+

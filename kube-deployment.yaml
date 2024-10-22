@@ -3,6 +3,7 @@ kind: Deployment # change here
 metadata:
   name: my-first-deployments
 spec:
+  serviceAccountName: bar # chỉ định service account
   revisionHistoryLimit: 10 # change here (default is 10)
   replicas: 2
   selector:
